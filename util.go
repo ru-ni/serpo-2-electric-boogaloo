@@ -2,6 +2,8 @@ package main
 
 import (
 	"math/rand"
+	"net/url"
+	"sort"
 	"time"
 )
 
@@ -61,3 +63,13 @@ type PairList []Pair
 func (p PairList) Len() int           { return len(p) }
 func (p PairList) Less(i, j int) bool { return p[i].Value < p[j].Value }
 func (p PairList) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+
+func notSpam(id string) bool {
+	doit := true // assume something isn't spam
+	for _, v := range antispam {
+		if id == v { //if we find it in the list
+			doit = false // we need to call off our plan
+		}
+	}
+	return doit //doit should be false if ID exists in antispam
+}
