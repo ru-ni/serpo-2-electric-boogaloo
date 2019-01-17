@@ -32,7 +32,7 @@ func (c *CommandHelp) Run(s *discordgo.Session, m *discordgo.Message, split []st
 		for _, cmd := range commands {
 			if split[1] == cmd.Base() {
 				helpmsg := cmd.Help(true)
-				sendm(m.ChannelID, helpmsg)
+				sendm(m, helpmsg)
 			}
 		}
 	default:
@@ -48,7 +48,7 @@ func (c *CommandHelp) Run(s *discordgo.Session, m *discordgo.Message, split []st
 		table.AppendBulk(data) // Add Bulk Data
 		table.SetAlignment(1)
 		table.Render()
-		sendm(m.ChannelID, "```"+fmt.Sprint(&b)+"```")
+		sendm(m, "```"+fmt.Sprint(&b)+"```")
 	}
 }
 func (c *CommandHelp) Help(specific bool) string {
@@ -59,43 +59,111 @@ type CommandTest struct{}
 
 func (c *CommandTest) Base() string { return "test" }
 func (c *CommandTest) Run(s *discordgo.Session, m *discordgo.Message, split []string) {
-	//sendm(m.ChannelID, top10(s, m))
-
-	newrole, err := ds.GuildRoleCreate("532962411653759000")
-	if err != nil {
-		fmt.Println("Err:", err)
-	}
-	ds.GuildRoleEdit("532962411653759000", newrole.ID, "human", 2, false, discordgo.PermissionAdministrator, false)
-
-	s.GuildMemberRoleAdd("532962411653759000", m.Author.ID, newrole.ID) /////////////////
+	//sendm(m, top10(s, m))
 
 }
 
 func (c *CommandTest) Help(specific bool) string {
 	switch specific {
 	case true:
-		return "The bigger they are, the harder they fall. Keep your eyes on your enemies!"
+		return "This is the command I use to test things"
 	default:
-		return "See the top10 moniest people on the server"
+		return "beep boop"
 	}
 }
 
+type CommandConfig struct{}
+
+func (c *CommandConfig) Base() string { return "cfg" }
+func (c *CommandConfig) Run(s *discordgo.Session, m *discordgo.Message, split []string) {
+	//sendm(m, top10(s, m))
+
+	switch len(split) {
+	case 1: //%cfg
+		sendm(m, fmt.Sprint(getConfig("all")))
+	case 2: //%cfg something
+		sendm(m, fmt.Sprint(getConfig(split[1])))
+	default: //%cfg [set/add/...] something value
+		if len(split) >= 4 {
+			value := ""
+			for i, word := range split {
+				if i > 2 {
+					value += word
+				}
+			}
+			switch split[1] {
+			case "set":
+				//overwrite it
+				fmt.Println(setConfig(split[2], value))
+			case "add":
+				//append something to it
+				fmt.Println(appendConfig(split[2], value))
+			}
+		}
+
+	}
+}
+
+func (c *CommandConfig) Help(specific bool) string {
+	switch specific {
+	case true:
+		return "[cfg] displays all registered configs. [cfg [append/set] key value] writes a thing to it"
+	default:
+		return "View and modify serpo's config"
+	}
+}
+
+type CommandCount struct{}
+
+func (c *CommandCount) Base() string { return "count" }
+func (c *CommandCount) Run(s *discordgo.Session, m *discordgo.Message, split []string) {
+	//sendm(m, top10(s, m))
+	sendm(m, grabCounts())
+
+	switch len(split) {
+	case 1: //%count
+		/* return an embed with
+		Your Counts
+		##
+		Your last 5 counts
+		xxxx, xxxx, xxxx, xxxx, xxxx
+		*/
+	case 2: //%count something
+	}
+
+}
+
+func (c *CommandCount) Help(specific bool) string {
+	switch specific {
+	case true:
+		return "One stop shop for all count stat related things"
+	default:
+		return "Lists some stats about your counts"
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////
 // Add all commands to a slice here
 var commands = []Command{
 	&CommandHelp{},
 	&CommandTest{},
+	&CommandCount{},
+	&CommandConfig{},
 }
 
 func handleMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 	chn, err := s.Channel(m.ChannelID)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
 	}
 	if !hasBank(m.Author.ID) {
 		fmt.Println("Failed to make bank for " + m.Author.ID)
 	}
 	if strings.HasPrefix(m.Content, prefix) {
 		processCommand(s, m.Message)
+	}
+	if isNum(m.Content) || m.ChannelID == getConfig("countChannel") { //potential way to handle the counts dynamically?
+		handleCount(s, m.Message)
 	}
 	fmt.Printf("%5s %20s %20s > %s |%v|%v|\n", chn.Name, time.Now().Format(time.Stamp), m.Author.ID, m.Content, len(m.Content), len(strings.Split(m.Content, " ")))
 }
@@ -106,9 +174,8 @@ func handleEdit(s *discordgo.Session, m *discordgo.MessageUpdate) {
 	}
 }
 
-func sendm(chn, msg string) {
-	ds.ChannelMessageSend(chn, msg)
-
+func sendm(m *discordgo.Message, msg string) {
+	ds.ChannelMessageSendEmbed(m.ChannelID, EmbedStr(" ", " ", [][]string{{m.Author.Username, msg, ""}, {"@", time.Now().Format(time.Stamp), "t"}}))
 }
 
 func processCommand(s *discordgo.Session, m *discordgo.Message) {

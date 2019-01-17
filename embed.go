@@ -40,8 +40,8 @@ func (e *Embed) SetDescription(description string) *Embed {
 	return e
 }
 
-//AddField [name] [value]
-func (e *Embed) AddField(name, value string) *Embed {
+//AddField [name] [value] [false]
+func (e *Embed) AddField(name, value string, inline bool) *Embed {
 	if len(value) > 1024 {
 		value = value[:1024]
 	}
@@ -51,8 +51,9 @@ func (e *Embed) AddField(name, value string) *Embed {
 	}
 
 	e.Fields = append(e.Fields, &discordgo.MessageEmbedField{
-		Name:  name,
-		Value: value,
+		Name:   name,
+		Value:  value,
+		Inline: inline,
 	})
 
 	return e
@@ -235,4 +236,21 @@ func (e *Embed) TruncateFooter() *Embed {
 		e.Footer.Text = e.Footer.Text[:EmbedLimitFooter]
 	}
 	return e
+}
+
+func EmbedStr(title, desc string, fields [][]string) *discordgo.MessageEmbed {
+
+	embed := NewEmbed().SetTitle(title).SetDescription(desc)
+	for i, _ := range fields {
+		if fields[i][2] == "t" {
+			embed = embed.AddField(fields[i][0], fields[i][1], true)
+		} else {
+			embed = embed.AddField(fields[i][0], fields[i][1], false)
+		}
+	}
+	//embed = embed
+
+	//SetImage("https://cdn.discordapp.com/avatars/119249192806776836/cc32c5c3ee602e1fe252f9f595f9010e.jpg?size=2048").
+	//SetThumbnail("https://cdn.discordapp.com/avatars/119249192806776836/cc32c5c3ee602e1fe252f9f595f9010e.jpg?size=2048").
+	return embed.SetColor(0x00ff00).MessageEmbed
 }
