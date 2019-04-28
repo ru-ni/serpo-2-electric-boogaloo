@@ -12,6 +12,8 @@ import (
 
 var ds *discordgo.Session
 
+var botID string
+
 // Variables used for command line parameters
 var (
 	Token string
@@ -24,10 +26,14 @@ func init() {
 }
 
 func main() {
+	//TODO
+	//cycle through our custom database to make sure
+	//that all configs are present for getConfig()
 
 	// Create a new Discord session using the provided bot token.
 	dg, err := discordgo.New("Bot " + Token)
 	ds = dg
+	botID = dg.State.User.ID
 	if err != nil {
 		fmt.Println("error creating Discord session,", err)
 		return
@@ -36,6 +42,7 @@ func main() {
 	// Register the messageCreate func as a callback for MessageCreate events.
 	dg.AddHandler(handleMessage)
 	dg.AddHandler(handleEdit)
+	dg.AddHandler(handleDelete)
 	// Open a websocket connection to Discord and begin listening.
 	err = dg.Open()
 	if err != nil {
