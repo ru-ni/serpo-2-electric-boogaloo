@@ -33,7 +33,6 @@ func main() {
 	// Create a new Discord session using the provided bot token.
 	dg, err := discordgo.New("Bot " + Token)
 	ds = dg
-	botID = dg.State.User.ID
 	if err != nil {
 		fmt.Println("error creating Discord session,", err)
 		return
@@ -49,6 +48,7 @@ func main() {
 		fmt.Println("error opening connection,", err)
 		return
 	}
+	botID = ds.State.User.ID
 
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")

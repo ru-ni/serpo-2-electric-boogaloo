@@ -43,10 +43,11 @@ func grabSwears() map[string]int {
 	return mapSwears(getConfig("swearList"))
 }
 func mapSwears(rawlist string) map[string]int {
-	//take a \r\n separated list
+	//take a \r\n separated list of swear-value
 	//and fill a map with swear:value
 	swearMap := make(map[string]int)
 	for _, line := range strings.Split(rawlist, "\r\n") {
+		//fmt.Println(i, line, rawlist) //for testing only
 		kvSplit := strings.Split(line, "-")
 		key := kvSplit[0]
 		value := getNum(kvSplit[1])
@@ -71,14 +72,14 @@ func logSwears(id string, inputMap map[string]int) bool {
 	for i, v := range inputMap {
 		swearbatch += i + "-" + strconv.Itoa(v) + "\r\n"
 	}
-	appendFile(botID, "swears", swearbatch, false)
+	appendFile(id, "swears", swearbatch, false)
 	//got that over with, now for some housekeeping fluff
 	//swearmap := grabSwears()
-	file := readFile(botID, "swears")
+	file := readFile(id, "swears")
 
 	statMap := parseJar(file)
 
-	return setFile(botID, "swears", statMap["total"]+"-Total;"+statMap["payload"])
+	return setFile(id, "swears", statMap["total"]+"-Total;"+statMap["payload"])
 
 }
 

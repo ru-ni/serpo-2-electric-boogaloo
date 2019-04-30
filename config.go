@@ -19,7 +19,7 @@ func getConfig(n string) string {
 	/* read the serpo config path and loop over all entries.
 	if n == x then all file contents to output slice.
 	*/
-	files, err := ioutil.ReadDir("./bank/" + configPath)
+	files, err := ioutil.ReadDir("./bank/" + botID)
 	var slice []string //holds our output
 	if err != nil {
 		fmt.Println(err)
@@ -49,7 +49,7 @@ func setConfig(n, seed string) bool {
 }
 func readConfigSubFolder(req string) string {
 	out := ""
-	files, err := ioutil.ReadDir("./bank/" + botID + req + "/")
+	files, err := ioutil.ReadDir("./bank/" + botID + "/" + req + "/")
 	if err != nil {
 		fmt.Println(err)
 	}

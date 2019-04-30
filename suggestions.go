@@ -18,7 +18,7 @@ import (
 		if not delete it
 */
 
-func handleSuggestion(s *discordgo.Session, chn *discordgo.Channel, m *discordgo.Message) {
+func handleSuggestions(s *discordgo.Session, chn *discordgo.Channel, m *discordgo.Message) {
 	//valid new suggestion has been posted
 	/*start a vote
 	Votes span 24h and are split into 5 checks
@@ -77,14 +77,7 @@ func startVote(m *discordgo.Message) {
 	*/
 	//timestamps
 	gen := getTime(m.ID).Unix()
-	s1 := gen + 288
-	s2 := s1 + 288
-	s3 := s2 + 288
-	s4 := s3 + 288
-	s5 := s4 + 288
-	if s5 < 0 {
-
-	}
+	fmt.Println(gen)
 	//seed the initial file
 	makeFile(botID, "suggestions/"+m.ID,
 		fmt.Sprintf("STAGE %v\r\n", 1))
