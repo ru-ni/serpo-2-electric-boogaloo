@@ -205,20 +205,22 @@ func (c *CommandConfig) Run(s *discordgo.Session, m *discordgo.Message, split []
 		switch split[1] {
 		case "all":
 			sendm(m, fmt.Sprint(getConfig("all")))
+			return
 
 		case "help":
 			sendm(m, commands[4].Help(true))
+			return
 
 		}
-		sendm(m, fmt.Sprint(getConfig(split[1])))
 
+		sendm(m, fmt.Sprint(getConfig(split[1])))
 	case 3:
 		switch split[1] {
 		case "create":
 			sendm(m, fmt.Sprint(createConfig(split[2])))
 
 		}
-	default: //%cfg [set/add/...] something value
+	default: //%cfg [set/add/...] something values+
 		if len(split) >= 4 {
 			value := ""
 			for i, word := range split {
@@ -326,10 +328,13 @@ func handler(s *discordgo.Session, m *discordgo.Message, chn *discordgo.Channel)
 	} /////////EOF TEST SEGREGATOR
 	presplit := strings.TrimPrefix(m.Content, prefix) //clear the prefix before we split the string
 	split := strings.Split(presplit, " ")             //split the sting by the spaces.
+
 	if !m.Author.Bot {
 		if !hasBank(m.Author.ID) {
 			fmt.Println("Failed to make bank for " + m.Author.ID)
 		}
+		//handle any swears that might be in it
+		go handleSwears(s, m, split)
 	}
 	//detect a %command and process it as long as it hasn't been processed already
 	if strings.HasPrefix(m.Content, prefix) && notSpam(m.ID) {
@@ -341,17 +346,10 @@ func handler(s *discordgo.Session, m *discordgo.Message, chn *discordgo.Channel)
 		go handleCount(s, chn, m)
 	}
 
-	//handle any swears that might be in it
-	if !m.Author.Bot && notSpam(m.ID) {
-		go handleSwears(s, m, split)
-		antispam = append(antispam, m.ID)
-	}
-	if m.ChannelID == getConfig("suggestionChannel") && notSpam(m.ID) {
+	if m.ChannelID == getConfig("suggestionChannel") {
 		go handleSuggestions(s, chn, m)
-		antispam = append(antispam, m.ID)
 	}
-
-	fmt.Printf("%5s %20s %20s > %s |%v|%v|\n", chn.Name, time.Now().Format(time.Stamp), m.Author.ID, split, m.Author.Bot, "EMPTY")
+	fmt.Printf("%5s %20s %20s > %s |%v|%v|\n", chn.Name, time.Now().Format(time.Stamp), m.Author.ID, split, m.Author.Bot, "<Bot")
 }
 func handleMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 	chn, err := s.Channel(m.ChannelID)
